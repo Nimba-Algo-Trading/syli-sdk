@@ -1,0 +1,56 @@
+{
+  "name": "syli-sdk",
+  "version": "1.0.0",
+  "description": "SDK Node.js officiel pour l’API de paiements crypto SYLI (checkout, paiements, webhooks HMAC).",
+  "license": "MIT",
+  "author": "SYLI",
+  "homepage": "https://github.com/Nimba-Algo-Trading/syli-sdk#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Nimba-Algo-Trading/syli-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Nimba-Algo-Trading/syli-sdk/issues"
+  },
+  "keywords": [
+    "syli",
+    "crypto",
+    "payments",
+    "bitcoin",
+    "usdt",
+    "checkout",
+    "webhooks"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "prepublishOnly": "npm run build"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "tsup": "^8.5.0",
+    "typescript": "^5.8.3"
+  }
+}
