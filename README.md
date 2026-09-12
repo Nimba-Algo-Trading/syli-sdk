@@ -1,6 +1,6 @@
 # SDK JavaScript SYLI
 
-Client Node.js (≥ 18) pour l’API [SYLI](https://syliagregateur.netlify.app) : paiements crypto, checkout hébergé, et vérification des webhooks (`x-syli-sig`).
+Client Node.js (≥ 18) pour l’API [SYLI](https://sylipayments.com) : paiements crypto, checkout hébergé, et vérification des webhooks (`x-syli-sig`).
 
 Dépôt : [Nimba-Algo-Trading/syli-sdk](https://github.com/Nimba-Algo-Trading/syli-sdk)
 
@@ -27,7 +27,7 @@ import { Syli } from "syli-sdk";
 
 const syli = new Syli({
   apiKey: process.env.SYLI_API_KEY,
-  // apiUrl: "https://syliagregateur.netlify.app/api/v1", // défaut
+  // apiUrl: "https://sylipayments.com/api/v1", // défaut
 });
 
 const invoice = await syli.createInvoice({
@@ -62,7 +62,7 @@ Utilitaires :
 
 ```js
 await syli.getStatus();
-await syli.getCurrencies();
+await syli.getCurrencies(); // cryptos du compte (wallet validé, clé envoyée)
 await syli.estimate({ amount: 20, currency_from: "usdt", currency_to: "btc" });
 await syli.getMinAmount({ currency_from: "usdt", currency_to: "btc" });
 ```
@@ -77,6 +77,7 @@ const { Syli } = require("syli-sdk");
 
 Header `x-syli-sig` = HMAC-SHA512 de `JSON.stringify(payload, Object.keys(payload).sort())`.
 Parsez le JSON, puis vérifiez — ne signez pas le body HTTP brut. Répondez **2xx**.
+Livrez si `payment_status === "confirmed"` (payin client). `payout_status` = versement wallet.
 
 Express :
 
@@ -95,7 +96,7 @@ app.post("/webhooks/syli", (req, res) => {
       req.headers["x-syli-sig"],
       process.env.SYLI_IPN_SECRET,
     );
-    if (event.payment_status === "finished") {
+    if (event.payment_status === "confirmed") {
       // marquer la commande event.order_id comme payée
     }
     res.sendStatus(200);
@@ -123,4 +124,4 @@ npm publish --access public
 
 ## Documentation API
 
-https://syliagregateur.netlify.app/docs/api
+https://sylipayments.com/docs/api

@@ -1,4 +1,4 @@
-export const DEFAULT_API_URL = "https://syliagregateur.netlify.app/api/v1";
+export const DEFAULT_API_URL = "https://sylipayments.com/api/v1";
 
 export type PayCurrency =
   | "btc"
@@ -15,6 +15,7 @@ export type PayCurrency =
 
 export type PriceCurrency = "usdt" | "usd" | (string & {});
 
+/** Statut payin renvoyé au marchand. `sending` / `finished` sont mappés en `confirmed`. */
 export type PaymentStatus =
   | "waiting"
   | "confirming"
@@ -32,7 +33,7 @@ export type SyliOptions = {
   apiKey: string;
   /**
    * Base URL, avec ou sans `/api/v1`.
-   * Défaut : `https://syliagregateur.netlify.app/api/v1`
+   * Défaut : `https://sylipayments.com/api/v1`
    */
   apiUrl?: string;
   /** Timeout HTTP en ms. Défaut : 30 000. */
@@ -109,9 +110,9 @@ export type CurrencyInfo = {
 
 export type CurrenciesResponse = {
   currencies: string[];
-  available?: CurrencyInfo[];
   accepted?: CurrencyInfo[];
-  selected?: CurrencyInfo[];
+  /** Identique à `accepted` (rétrocompat). */
+  available?: CurrencyInfo[];
 };
 
 export type EstimateParams = {

@@ -11,7 +11,7 @@ var SyliError = class extends Error {
 };
 
 // src/types.ts
-var DEFAULT_API_URL = "https://syliagregateur.netlify.app/api/v1";
+var DEFAULT_API_URL = "https://sylipayments.com/api/v1";
 
 // src/webhooks.ts
 import { createHmac, timingSafeEqual } from "crypto";
