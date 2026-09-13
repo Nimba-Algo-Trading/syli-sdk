@@ -3,6 +3,7 @@ export { SyliError } from "./errors.js";
 export {
   canonicalJson,
   constructEvent,
+  isPaidStatus,
   signPayload,
   signatureFromHeaders,
   verifySignature,

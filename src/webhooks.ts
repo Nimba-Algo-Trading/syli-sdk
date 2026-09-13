@@ -40,6 +40,12 @@ export function signatureFromHeaders(
   return Array.isArray(value) ? value[0] ?? "" : value ?? "";
 }
 
+/** Payin client encaissé. `sending` / `finished` restent acceptés (anciens webhooks). */
+export function isPaidStatus(status: string | null | undefined): boolean {
+  const key = String(status ?? "").trim().toLowerCase();
+  return key === "confirmed" || key === "finished" || key === "sending";
+}
+
 /**
  * Parse le JSON, vérifie `x-syli-sig`, et renvoie l’événement.
  * Ne signez jamais le body HTTP brut : le HMAC porte sur l’objet JSON aux clés triées.

@@ -50,7 +50,7 @@ export type CreatePaymentParams = {
 };
 
 export type Payment = {
-  payment_id: string;
+  payment_id: string | null;
   payment_status: PaymentStatus;
   pay_address: string | null;
   payin_extra_id: string | null;
@@ -58,10 +58,12 @@ export type Payment = {
   price_currency: string;
   pay_amount: number | null;
   actually_paid: number | null;
-  pay_currency: string;
+  actually_paid_usd: number | null;
+  pay_currency: string | null;
   order_id: string | null;
   order_description: string | null;
   invoice_id: string | null;
+  invoice_url: string;
   outcome_amount: number | null;
   outcome_currency: string | null;
   payout_address: string | null;
@@ -151,6 +153,7 @@ export type WebhookEvent = {
   price_currency: string;
   pay_amount: number | null;
   actually_paid: number | null;
+  actually_paid_usd: number | null;
   pay_currency: string;
   order_id: string | null;
   order_description: string | null;

@@ -4,6 +4,7 @@ import { test } from "node:test";
 import {
   canonicalJson,
   constructEvent,
+  isPaidStatus,
   signPayload,
   signatureFromHeaders,
   verifySignature,
@@ -42,4 +43,12 @@ test("constructEvent refuse une mauvaise signature", () => {
 test("signatureFromHeaders lit x-syli-sig", () => {
   assert.equal(signatureFromHeaders({ "x-syli-sig": "abc" }), "abc");
   assert.equal(signatureFromHeaders(new Headers({ "x-syli-sig": "xyz" })), "xyz");
+});
+
+test("isPaidStatus accepte confirmed et l’ancien sending/finished", () => {
+  assert.equal(isPaidStatus("confirmed"), true);
+  assert.equal(isPaidStatus("sending"), true);
+  assert.equal(isPaidStatus("finished"), true);
+  assert.equal(isPaidStatus("waiting"), false);
+  assert.equal(isPaidStatus("partially_paid"), false);
 });

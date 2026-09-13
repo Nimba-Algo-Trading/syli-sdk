@@ -55,7 +55,11 @@ const payment = await syli.createPayment({
 });
 
 console.log(payment.pay_address, payment.payin_extra_id);
-const latest = await syli.getPayment(payment.payment_id);
+if (payment.payment_id) {
+  const latest = await syli.getPayment(payment.payment_id);
+}
+const status = await syli.getInvoice(invoice.id);
+// status.payment_status, status.actually_paid, status.actually_paid_usd
 ```
 
 Utilitaires :
@@ -96,7 +100,7 @@ app.post("/webhooks/syli", (req, res) => {
       req.headers["x-syli-sig"],
       process.env.SYLI_IPN_SECRET,
     );
-    if (event.payment_status === "confirmed") {
+    if (syli.isPaidStatus(event.payment_status)) {
       // marquer la commande event.order_id comme payée
     }
     res.sendStatus(200);
@@ -110,7 +114,7 @@ app.post("/webhooks/syli", (req, res) => {
 Helpers autonomes :
 
 ```js
-import { verifySignature, constructEvent } from "syli-sdk";
+import { verifySignature, constructEvent, isPaidStatus } from "syli-sdk";
 ```
 
 ## Publier sur npm

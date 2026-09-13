@@ -38,6 +38,10 @@ function signatureFromHeaders(headers) {
   const value = raw["x-syli-sig"] ?? raw["X-Syli-Sig"] ?? raw["X-SYLI-SIG"] ?? "";
   return Array.isArray(value) ? value[0] ?? "" : value ?? "";
 }
+function isPaidStatus(status) {
+  const key = String(status ?? "").trim().toLowerCase();
+  return key === "confirmed" || key === "finished" || key === "sending";
+}
 function constructEvent(body, signature, secret) {
   const payload = typeof body === "string" ? JSON.parse(body) : body;
   if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
@@ -71,12 +75,14 @@ var Syli = class {
   createPayment(body) {
     return this.request("POST", "/payment", body);
   }
+  /** Statut du payin. UUID paiement ou facture. */
   getPayment(id) {
     return this.request("GET", `/payment/${encodeURIComponent(id)}`);
   }
   createInvoice(body) {
     return this.request("POST", "/invoice", body);
   }
+  /** Statut du payin. Même objet que getPayment ; id facture ou paiement. */
   getInvoice(id) {
     return this.request("GET", `/invoice/${encodeURIComponent(id)}`);
   }
@@ -112,6 +118,10 @@ var Syli = class {
   }
   signatureFromHeaders(headers) {
     return signatureFromHeaders(headers);
+  }
+  /** Payin client encaissé. `sending` / `finished` restent acceptés (anciens webhooks). */
+  isPaidStatus(status) {
+    return isPaidStatus(status);
   }
   async request(method, path, body, auth = true) {
     const controller = new AbortController();
@@ -156,6 +166,7 @@ export {
   SyliError,
   canonicalJson,
   constructEvent,
+  isPaidStatus,
   signPayload,
   signatureFromHeaders,
   verifySignature

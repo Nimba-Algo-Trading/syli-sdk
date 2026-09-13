@@ -11,7 +11,7 @@ import type {
   MinAmountParams,
   Payment,
 } from "./types.js";
-import { constructEvent, signatureFromHeaders, verifySignature } from "./webhooks.js";
+import { constructEvent, isPaidStatus as checkPaidStatus, signatureFromHeaders, verifySignature } from "./webhooks.js";
 
 function normalizeApiUrl(value: string): string {
   let url = value.trim().replace(/\/+$/, "");
@@ -37,6 +37,7 @@ export class Syli {
     return this.request("POST", "/payment", body);
   }
 
+  /** Statut du payin. UUID paiement ou facture. */
   getPayment(id: string): Promise<Payment> {
     return this.request("GET", `/payment/${encodeURIComponent(id)}`);
   }
@@ -45,7 +46,8 @@ export class Syli {
     return this.request("POST", "/invoice", body);
   }
 
-  getInvoice(id: string): Promise<Invoice> {
+  /** Statut du payin. Même objet que getPayment ; id facture ou paiement. */
+  getInvoice(id: string): Promise<Payment> {
     return this.request("GET", `/invoice/${encodeURIComponent(id)}`);
   }
 
@@ -91,6 +93,11 @@ export class Syli {
 
   signatureFromHeaders(headers: Headers | Record<string, string | string[] | undefined | null>) {
     return signatureFromHeaders(headers);
+  }
+
+  /** Payin client encaissé. `sending` / `finished` restent acceptés (anciens webhooks). */
+  isPaidStatus(status: string | null | undefined): boolean {
+    return checkPaidStatus(status);
   }
 
   private async request<T>(
