@@ -14,7 +14,7 @@ Depuis npm :
 npm install syli-sdk
 ```
 
-Depuis ce dépôt GitHub :
+Depuis ce dépôt GitHub (`dist` déjà compilé, aucune dépendance à installer) :
 
 ```bash
 npm install github:Nimba-Algo-Trading/syli-sdk

@@ -1,3 +1,7 @@
+## 1.1.2
+
+- `npm install github:Nimba-Algo-Trading/syli-sdk` n’installe plus `tsup` : le `dist` est déjà dans le dépôt, donc l’audit npm du projet consommateur ne remonte plus les CVE des outils de build.
+
 ## 1.1.1
 
 - Défaut `https://api.sylipayments.com/v1`. `https://sylipayments.com/api/v1` reste un alias.

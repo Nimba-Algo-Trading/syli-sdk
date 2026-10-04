@@ -1,6 +1,6 @@
 {
   "name": "syli-sdk",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "SDK Node.js officiel pour l’API de paiements crypto SYLI (checkout, paiements, webhooks HMAC).",
   "license": "MIT",
   "author": "SYLI",
@@ -42,7 +42,6 @@
   ],
   "scripts": {
     "build": "tsup src/index.ts --format cjs,esm --dts --clean",
-    "prepare": "npm run build",
     "test": "npm run build && node --test test/*.test.mjs",
     "prepublishOnly": "npm run build"
   },
