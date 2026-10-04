@@ -116,15 +116,6 @@ Helpers autonomes :
 import { verifySignature, verifySignatureV2, constructEvent, isPaidStatus } from "syli-sdk";
 ```
 
-## Publier sur npm
-
-```bash
-npm install
-npm run build
-npm login
-npm publish --access public
-```
-
 ## Documentation API
 
 https://sylipayments.com/docs/api
