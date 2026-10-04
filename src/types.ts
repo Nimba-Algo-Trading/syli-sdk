@@ -1,4 +1,5 @@
-export const DEFAULT_API_URL = "https://sylipayments.com/api/v1";
+export const DEFAULT_API_URL = "https://api.sylipayments.com/v1";
+export const DEFAULT_API_VERSION = "2026-10";
 
 export type PayCurrency =
   | "btc"
@@ -29,15 +30,20 @@ export type PaymentStatus =
   | (string & {});
 
 export type SyliOptions = {
-  /** Clé secrète `syli_live_…` (Configuration → API paiement). */
+  /** Clé secrète `syli_live_…` (Configuration → Clés API). */
   apiKey: string;
   /**
-   * Base URL, avec ou sans `/api/v1`.
-   * Défaut : `https://sylipayments.com/api/v1`
+   * Base URL. Défaut : `https://api.sylipayments.com/v1`
+   * (`https://sylipayments.com/api/v1` reste valide).
    */
   apiUrl?: string;
   /** Timeout HTTP en ms. Défaut : 30 000. */
   timeoutMs?: number;
+  /**
+   * En-tête x-syli-api-version. Défaut : 2026-10 (401 sur clé invalide).
+   * Passez une chaîne vide pour le 503 historique jusqu’au 2027-04-02.
+   */
+  apiVersion?: string;
 };
 
 export type CreatePaymentParams = {
@@ -65,6 +71,7 @@ export type Payment = {
   invoice_id: string | null;
   invoice_url: string;
   outcome_amount: number | null;
+  received_amount?: number | null;
   outcome_currency: string | null;
   payout_address: string | null;
   payout_amount: number | null;
@@ -75,6 +82,8 @@ export type Payment = {
   updated_at: string;
   expiration_estimate_date: string | null;
   rate_locked_at: string | null;
+  /** false = clé syli_test_ / paiement simulé. */
+  livemode?: boolean;
 };
 
 export type CreateInvoiceParams = {
@@ -100,6 +109,7 @@ export type Invoice = {
   cancel_url: string | null;
   created_at: string;
   invoice_url: string;
+  livemode?: boolean;
 };
 
 export type CurrencyInfo = {
@@ -158,10 +168,12 @@ export type WebhookEvent = {
   order_id: string | null;
   order_description: string | null;
   outcome_amount: number | null;
+  received_amount?: number | null;
   outcome_currency: string | null;
   payout_amount: number | null;
   payout_hash: string | null;
   payin_hash: string | null;
   payout_status: string | null;
+  livemode?: boolean;
   [key: string]: unknown;
 };

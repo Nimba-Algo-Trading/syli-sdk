@@ -1,5 +1,5 @@
 import { SyliError } from "./errors.js";
-import { DEFAULT_API_URL, type SyliOptions } from "./types.js";
+import { DEFAULT_API_URL, DEFAULT_API_VERSION, type SyliOptions } from "./types.js";
 import type {
   CreateInvoiceParams,
   CreatePaymentParams,
@@ -11,26 +11,38 @@ import type {
   MinAmountParams,
   Payment,
 } from "./types.js";
-import { constructEvent, isPaidStatus as checkPaidStatus, signatureFromHeaders, verifySignature } from "./webhooks.js";
+import { constructEvent, isPaidStatus as checkPaidStatus, signatureFromHeaders, verifySignature, type ConstructEventOptions } from "./webhooks.js";
 
 function normalizeApiUrl(value: string): string {
-  let url = value.trim().replace(/\/+$/, "");
-  if (!/\/api\/v1$/i.test(url)) url += "/api/v1";
-  return url;
+  const raw = value.trim().replace(/\/+$/, "");
+  const withProto = /^[a-z][a-z0-9+.-]*:\/\//i.test(raw) ? raw : `https://${raw}`;
+  try {
+    const u = new URL(withProto);
+    const host = u.hostname.toLowerCase();
+    if (host === "api.sylipayments.com" || host === "www.api.sylipayments.com") {
+      return `${u.origin}/v1`;
+    }
+    return `${u.origin}/api/v1`;
+  } catch {
+    if (/\/api\/v1$/i.test(raw) || /\/v1$/i.test(raw)) return raw;
+    return `${raw}/api/v1`;
+  }
 }
 
 export class Syli {
   readonly apiUrl: string;
   readonly apiKey: string;
   readonly timeoutMs: number;
+  readonly apiVersion: string;
 
   constructor(options: SyliOptions) {
     if (!options?.apiKey) {
-      throw new SyliError("apiKey est requis (syli_live_…)");
+      throw new SyliError("apiKey est requis (syli_live_… ou syli_test_…)");
     }
     this.apiKey = options.apiKey;
     this.apiUrl = normalizeApiUrl(options.apiUrl ?? DEFAULT_API_URL);
     this.timeoutMs = options.timeoutMs ?? 30_000;
+    this.apiVersion = options.apiVersion === undefined ? DEFAULT_API_VERSION : options.apiVersion;
   }
 
   createPayment(body: CreatePaymentParams): Promise<Payment> {
@@ -74,6 +86,11 @@ export class Syli {
     return this.request("GET", `/min-amount?${query}`, undefined, false);
   }
 
+  /** Sandbox : simule un payin (clé syli_test_ uniquement). */
+  simulatePayment(id: string, outcome: "paid" | "partially_paid" | "expired" = "paid"): Promise<Payment> {
+    return this.request("POST", `/payment/${encodeURIComponent(id)}/simulate`, { outcome });
+  }
+
   /** Vérifie l’en-tête `x-syli-sig` d’un webhook. */
   verifyWebhook(payload: Record<string, unknown>, signature: string | null | undefined, secret: string): boolean {
     return verifySignature(payload, secret, signature);
@@ -81,14 +98,16 @@ export class Syli {
 
   /**
    * Parse + vérifie un webhook (Express, Next.js, Fastify…).
-   * Passez le JSON parsé ou le body texte, et l’en-tête `x-syli-sig`.
+   * v2 : passez le body brut (string) et l’objet headers.
+   * v1 : JSON parsé + `x-syli-sig` (compat).
    */
   constructEvent(
     body: string | Record<string, unknown>,
-    signature: string | null | undefined,
+    signatureOrHeaders: string | null | undefined | Headers | Record<string, string | string[] | undefined | null>,
     secret: string,
+    options?: ConstructEventOptions,
   ) {
-    return constructEvent(body, signature, secret);
+    return constructEvent(body, signatureOrHeaders, secret, options);
   }
 
   signatureFromHeaders(headers: Headers | Record<string, string | string[] | undefined | null>) {
@@ -110,6 +129,7 @@ export class Syli {
     const timer = setTimeout(() => controller.abort(), this.timeoutMs);
     const headers: Record<string, string> = { accept: "application/json" };
     if (auth) headers["x-api-key"] = this.apiKey;
+    if (this.apiVersion) headers["x-syli-api-version"] = this.apiVersion;
     if (body !== undefined) headers["content-type"] = "application/json";
 
     let res: Response;
@@ -140,7 +160,8 @@ export class Syli {
     const record = json && typeof json === "object" ? (json as Record<string, unknown>) : null;
     if (!res.ok || record?.status === false) {
       const message = String(record?.message ?? record?.error ?? `Erreur SYLI (${res.status})`);
-      throw new SyliError(message, res.status, json);
+      const code = typeof record?.code === "string" ? record.code : null;
+      throw new SyliError(message, res.status, json, code);
     }
     return json as T;
   }

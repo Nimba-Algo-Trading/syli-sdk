@@ -8,7 +8,7 @@ Dépôt : [Nimba-Algo-Trading/syli-sdk](https://github.com/Nimba-Algo-Trading/sy
 
 ## Installation
 
-Depuis npm (après publication) :
+Depuis npm :
 
 ```bash
 npm install syli-sdk
@@ -27,7 +27,7 @@ import { Syli } from "syli-sdk";
 
 const syli = new Syli({
   apiKey: process.env.SYLI_API_KEY,
-  // apiUrl: "https://sylipayments.com/api/v1", // défaut
+  // apiUrl: "https://api.sylipayments.com/v1", // défaut
 });
 
 const invoice = await syli.createInvoice({
@@ -69,6 +69,7 @@ await syli.getStatus();
 await syli.getCurrencies(); // cryptos du compte (wallet validé, clé envoyée)
 await syli.estimate({ amount: 20, currency_from: "usdt", currency_to: "btc" });
 await syli.getMinAmount({ currency_from: "usdt", currency_to: "btc" });
+await syli.simulatePayment(payment.payment_id, "paid"); // clé syli_test_ uniquement
 ```
 
 CommonJS :
@@ -79,11 +80,9 @@ const { Syli } = require("syli-sdk");
 
 ## Webhooks
 
-Header `x-syli-sig` = HMAC-SHA512 de `JSON.stringify(payload, Object.keys(payload).sort())`.
-Parsez le JSON, puis vérifiez — ne signez pas le body HTTP brut. Répondez **2xx**.
-Livrez si `payment_status === "confirmed"` (payin client). `payout_status` = versement wallet.
+Recommandé (v2) : `x-syli-sig-v2` = HMAC-SHA256 de `` `${timestamp}.${rawBody}` ``, plus `x-syli-timestamp`. Conservé (v1) : `x-syli-sig` = HMAC-SHA512 du JSON aux clés triées. Répondez **2xx**. Dédoublonnez sur `payment_id` ; livrez à la première transition vers `confirmed`.
 
-Express :
+Express (body brut) :
 
 ```js
 import express from "express";
@@ -91,17 +90,17 @@ import { Syli, SyliError } from "syli-sdk";
 
 const syli = new Syli({ apiKey: process.env.SYLI_API_KEY });
 const app = express();
-app.use(express.json());
+app.use(express.raw({ type: "application/json" }));
 
 app.post("/webhooks/syli", (req, res) => {
   try {
     const event = syli.constructEvent(
-      req.body,
-      req.headers["x-syli-sig"],
+      req.body.toString("utf8"),
+      req.headers,
       process.env.SYLI_IPN_SECRET,
     );
     if (syli.isPaidStatus(event.payment_status)) {
-      // marquer la commande event.order_id comme payée
+      // marquer event.order_id une seule fois
     }
     res.sendStatus(200);
   } catch (err) {
@@ -114,7 +113,7 @@ app.post("/webhooks/syli", (req, res) => {
 Helpers autonomes :
 
 ```js
-import { verifySignature, constructEvent, isPaidStatus } from "syli-sdk";
+import { verifySignature, verifySignatureV2, constructEvent, isPaidStatus } from "syli-sdk";
 ```
 
 ## Publier sur npm
